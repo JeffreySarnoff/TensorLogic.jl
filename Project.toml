@@ -1,7 +1,7 @@
 name = "TensorLogic"
 uuid = "1b5c0b4e-0a5f-4e35-a3f9-3a1b18e28d2a"
-authors = ["TensorLogic.jl contributors"]
 version = "0.9.1"
+authors = ["TensorLogic.jl contributors"]
 
 [deps]
 Dictionaries = "85a47980-9c8c-11e8-2b9f-f7ca1fa99fb4"
@@ -9,15 +9,15 @@ JSON3 = "0f8b85d8-7281-11e9-16c2-39a750bddbf1"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
-[compat]
-julia = "1.12"
-Test = "1.12"
-Dictionaries = "0.4"
-JSON3 = "1"
-
-
 [weakdeps]
 OMEinsum = "ebe7aa44-baf0-506c-a96f-8464559b3922"
 
 [extensions]
 TensorLogicOMEinsumExt = "OMEinsum"
+
+[compat]
+Dictionaries = "0.4"
+JSON3 = "1"
+OMEinsum = "0.9"
+Test = "1.12"
+julia = "1.12"
