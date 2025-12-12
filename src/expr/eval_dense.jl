@@ -5,8 +5,8 @@ using Dictionaries
 
 @inline _relu(x) = ifelse(x > zero(x), x, zero(x))
 
-"""Evaluate a tutorial-style expression to a dense `LabeledTensor`."""
-"""Evaluate a `TLExpr` to a `LabeledTensor`.
+"""Evaluate a tutorial-style expression to a dense `LabeledTensor`.
+  Evaluate a `TLExpr` to a `LabeledTensor`.
 
 Use `inputs` to supply predicate tensors, and `config` to select semantics.
 """
