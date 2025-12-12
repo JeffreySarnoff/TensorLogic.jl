@@ -151,7 +151,7 @@ function _parse_imply(p::_EP)
     return e
 end
 
-\"\"\"Parse tutorial-style expression language into `TLExpr`.\"\"\"
+"""Parse tutorial-style expression language into `TLExpr`."""
 function parse_tlexpr(src::AbstractString)::TLExpr
     toks = _etokenize(src)
     p = _EP(toks, 1)
