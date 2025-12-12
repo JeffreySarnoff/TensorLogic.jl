@@ -1,0 +1,95 @@
+#!/usr/bin/env julia
+using TensorLogic
+
+function _usage()
+    println("""
+tensorlogic [options] EXPR
+
+Options:
+  -d, --domain NAME:SIZE       Declare a domain (repeatable)
+  --strategy STR               soft_differentiable | hard_boolean | fuzzy_godel | fuzzy_product | fuzzy_lukasiewicz | probabilistic
+  --output-format FMT          stats | dot | json   (default: stats)
+  --validate                   Validate expression against declared domains/signatures
+  --strict                     In --validate mode, require predicate signatures
+  --debug                      Print debug info
+  -h, --help                   Show this help
+""")
+end
+
+function _parse_domain(arg::String)
+    parts = split(arg, ":")
+    length(parts) == 2 || error("invalid domain spec '$arg' (expected NAME:SIZE)")
+    return Symbol(parts[1]), parse(Int, parts[2])
+end
+
+function main(args)
+    ctx = CompilerContext()
+    strategy = :soft_differentiable
+    output = :stats
+    do_validate = false
+    strict = false
+    debug = false
+    expr_str = nothing
+
+    i = 1
+    while i <= length(args)
+        a = args[i]
+        if a == "-h" || a == "--help"
+            _usage(); return 0
+        elseif a == "-d" || a == "--domain"
+            i += 1; i <= length(args) || error("missing argument after $a")
+            name, size = _parse_domain(args[i])
+            add_domain!(ctx, name, size)
+        elseif a == "--strategy"
+            i += 1; i <= length(args) || error("missing argument after --strategy")
+            strategy = Symbol(args[i])
+        elseif a == "--output-format"
+            i += 1; i <= length(args) || error("missing argument after --output-format")
+            output = Symbol(args[i])
+        elseif a == "--validate"
+            do_validate = true
+        elseif a == "--strict"
+            strict = true
+        elseif a == "--debug"
+            debug = true
+        else
+            expr_str = a
+            break
+        end
+        i += 1
+    end
+
+    expr_str === nothing && ( _usage(); return 1 )
+
+    expr = parse_tlexpr(expr_str)
+    g = compile_graph(expr)
+
+    if debug
+        println("expr: ", expr_str)
+        println("nodes: ", length(g.nodes), ", root: ", g.root)
+        println("op_counts: ", graph_stats(g).op_counts)
+    end
+
+    if do_validate
+        rep = validate_expr(expr, ctx; strict=strict)
+        for w in rep.warnings; println("warning: ", w); end
+        for e in rep.errors;   println("error: ", e); end
+        rep.ok || return 2
+    end
+
+    if output == :stats
+        st = graph_stats(g)
+        println("nodes: ", st.nodes)
+        println("op_counts: ", st.op_counts)
+        println("strategy: ", strategy)
+    elseif output == :dot
+        println(export_dot(g))
+    elseif output == :json
+        println(export_json(g))
+    else
+        error("unknown output-format: $output")
+    end
+    return 0
+end
+
+exit(main(ARGS))
