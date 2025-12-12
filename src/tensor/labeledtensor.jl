@@ -8,9 +8,17 @@ using LinearAlgebra
 struct LabeledTensor{A<:AbstractArray}
     data::A
     axes::Vector{Symbol}
-end
 
-LabeledTensor(data::AbstractArray, axes::Vector{Symbol}) = LabeledTensor{typeof(data)}(data, axes)
+    function LabeledTensor{A}(data::A, axes::Vector{Symbol}) where {A<:AbstractArray}
+        ndims(data) == length(axes) || throw(ArgumentError("number of axes must match number of dimensions"))
+        new{A}(data, axes)
+    end
+
+    function LabeledTensor(data::A, axes::Vector{Symbol}) where {A<:AbstractArray}
+        ndims(data) == length(axes) || throw(ArgumentError("number of axes must match number of dimensions"))
+        new{A}(data, axes)
+    end
+end
 
 """Return a map axis=>size."""
 function axis_sizes(t::LabeledTensor)
