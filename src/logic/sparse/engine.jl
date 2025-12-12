@@ -1,10 +1,11 @@
 #------------------------------------------------------------------------------
 # Monotone forward-chaining engine for IRProgram (sparse tuple backend)
 #
-# This file implements a tiny Datalog-like evaluator over SparseRelation{N}:
-# - facts insert tuples
-# - rules join body relations on shared variables + constants, then project to head
-# - monotone iteration to a least fixpoint (or until maxiters)
+# Semantics:
+# - facts insert tuples into relations
+# - each iteration applies all rules once, but **rule bodies see a snapshot**
+#   of relations from the start of that iteration (so `maxiters` is meaningful)
+# - iteration is monotone and stops at a fixpoint when no new tuples are added
 #------------------------------------------------------------------------------
 using Dictionaries
 
@@ -119,25 +120,32 @@ end
 
 # --- rule application --------------------------------------------------------
 
-"""Apply one rule once; return number of new tuples added to the head relation."""
-function _apply_rule!(ctx::TLContext, rule::Rule)::Int
+"""Apply one rule once against a snapshot of relations; return number of new tuples added."""
+function _apply_rule!(ctx::TLContext, rule::Rule, snap::Dictionary{Symbol,Any})::Int
     head = rule.head
     body = rule.body
     isempty(body) && throw(ArgumentError("rule body cannot be empty"))
 
-    # Ensure body relations exist and select a join order (smallest first).
-    rels = Any[_get_relation(ctx, a.pred, arity(a)) for a in body]
+    # Ensure relations exist (for arity checks) and grab snapshot rows.
+    rows = Any[]
+    sizes = Int[]
+    for a in body
+        _get_relation(ctx, a.pred, arity(a)) # declares empty if missing
+        rs = _has(snap, a.pred) ? snap[a.pred] : NTuple{arity(a),Int}[]
+        push!(rows, rs)
+        push!(sizes, length(rs))
+    end
+
+    # Join order: smallest relation first (by snapshot size).
     if length(body) > 1
-        ord = sortperm(1:length(body), by=i->length(rels[i]))
+        ord = sortperm(1:length(body), by=i->sizes[i])
         body = [body[i] for i in ord]
-        rels = [rels[i] for i in ord]
+        rows = [rows[i] for i in ord]
     end
 
     headrel = _get_relation(ctx, head.pred, arity(head))
-
     newcount = 0
 
-    # DFS join through body atoms.
     function dfs(i::Int, bind::Dictionary{Symbol,Int})
         if i > length(body)
             tup = _emit_head_tuple(head, bind)
@@ -146,8 +154,8 @@ function _apply_rule!(ctx::TLContext, rule::Rule)::Int
         end
 
         a = body[i]
-        r = rels[i]
-        for row in r.tuples
+        rs = rows[i]
+        for row in rs
             _row_compatible!(ctx, bind, a, row) || continue
 
             # Avoid copying unless this atom introduces new vars.
@@ -177,7 +185,7 @@ end
 """Run a program in a context. Returns `ctx` after running.
 
 Keyword arguments:
-- `maxiters`: maximum forward-chaining iterations
+- `maxiters`: maximum rule-application iterations
 - `stop`: `:fixpoint` (default) or `:maxiters`
 """
 function run!(ctx::TLContext, prog::IRProgram; maxiters::Int=50, stop::Symbol=:fixpoint)
@@ -186,11 +194,16 @@ function run!(ctx::TLContext, prog::IRProgram; maxiters::Int=50, stop::Symbol=:f
         _add_fact!(ctx, a)
     end
 
-    # Iterate rules to fixpoint.
+    # Iterate rules to a fixpoint (rule bodies see a per-iteration snapshot).
     for _ in 1:maxiters
+        snap = Dictionary{Symbol,Any}()
+        for (pred, rel) in pairs(ctx.rels)
+            set!(snap, pred, collect((rel::SparseRelation).tuples))
+        end
+
         added = 0
         for r in prog.rules
-            added += _apply_rule!(ctx, r)
+            added += _apply_rule!(ctx, r, snap)
         end
         (stop === :fixpoint && added == 0) && break
     end
@@ -214,4 +227,3 @@ function relation_tuples(ctx::TLContext, pred::Symbol)
     end
     return out
 end
-

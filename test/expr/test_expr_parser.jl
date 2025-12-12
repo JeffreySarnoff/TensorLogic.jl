@@ -8,7 +8,7 @@
     # right associative implication
     e3 = parse_tlexpr("a(x) -> b(x) -> c(x)")
     @test e3 isa TensorLogic.ImplyExpr
-    @test (e3::TensorLogic.ImplyExpr).b isa ImplyExpr
+    @test (e3::TensorLogic.ImplyExpr).b isa TensorLogic.ImplyExpr
 
     # quantifiers with/without domain
     e4 = parse_tlexpr("exists y:Person. knows(x,y)")

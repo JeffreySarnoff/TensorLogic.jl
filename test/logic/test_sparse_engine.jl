@@ -35,7 +35,7 @@
     run!(ctx4, IRProgram([Atom(:B,[Const(:A)])], Rule[]))
     @test_throws ArgumentError run!(ctx4, prog_unbound; maxiters=1)
 
-    # constants in body should filter
+    # ground atoms in a rule body act as boolean conditions (they do not bind other variables)
     srcc = """
     P[A]. P[B].
     Q[A]. 
@@ -46,7 +46,7 @@
     run!(ctx5, prog)
     r = Set(relation_tuples(ctx5, :R))
     @test (:A,) in r
-    @test (:B,) ∉ r
+    @test (:B,) in r
 
     # empty body rejected
     prog_empty = IRProgram(Atom[], [Rule(Atom(:H, [Const(:A)]), Atom[])])
