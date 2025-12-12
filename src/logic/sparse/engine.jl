@@ -3,9 +3,10 @@
 #
 # Semantics:
 # - facts insert tuples into relations
-# - each iteration applies all rules once, but **rule bodies see a snapshot**
-#   of relations from the start of that iteration (so `maxiters` is meaningful)
-# - iteration is monotone and stops at a fixpoint when no new tuples are added
+# - rules join body relations on shared variables + constants, then project to head
+# - iteration proceeds in *rounds*; within a round, rule bodies see a snapshot taken
+#   at the start of the round. This makes `maxiters` meaningful and prevents
+#   same-round self-feeding recursion.
 #------------------------------------------------------------------------------
 using Dictionaries
 
@@ -118,34 +119,45 @@ function _emit_head_tuple(head::Atom, bind::Dictionary{Symbol,Int})
     end, N)
 end
 
+# --- snapshots ---------------------------------------------------------------
+
+"""Build a snapshot mapping `pred => Vector{NTuple{N,Int}}` at the start of an iteration."""
+function _snapshot(ctx::TLContext)
+    snap = Dictionary{Symbol,Any}()
+    for (pred, rel) in pairs(ctx.rels)
+        if rel isa SparseRelation
+            # Snapshot as a Vector to make `maxiters` semantics precise and iteration stable.
+            set!(snap, pred, collect(rel.tuples))
+        end
+    end
+    return snap
+end
+
+@inline function _rows(snap::Dictionary{Symbol,Any}, pred::Symbol)
+    _has(snap, pred) ? snap[pred] : Any[]
+end
+
 # --- rule application --------------------------------------------------------
 
-"""Apply one rule once against a snapshot of relations; return number of new tuples added."""
+"""Apply one rule once using a round snapshot; return number of new tuples added to the head relation."""
 function _apply_rule!(ctx::TLContext, rule::Rule, snap::Dictionary{Symbol,Any})::Int
     head = rule.head
     body = rule.body
     isempty(body) && throw(ArgumentError("rule body cannot be empty"))
 
-    # Ensure relations exist (for arity checks) and grab snapshot rows.
-    rows = Any[]
-    sizes = Int[]
-    for a in body
-        _get_relation(ctx, a.pred, arity(a)) # declares empty if missing
-        rs = _has(snap, a.pred) ? snap[a.pred] : NTuple{arity(a),Int}[]
-        push!(rows, rs)
-        push!(sizes, length(rs))
-    end
+    # Ensure head relation exists (writes go to live relation).
+    headrel = _get_relation(ctx, head.pred, arity(head))
 
-    # Join order: smallest relation first (by snapshot size).
+    # Choose join order by snapshot size (smallest first).
     if length(body) > 1
+        sizes = [length(_rows(snap, a.pred)) for a in body]
         ord = sortperm(1:length(body), by=i->sizes[i])
         body = [body[i] for i in ord]
-        rows = [rows[i] for i in ord]
     end
 
-    headrel = _get_relation(ctx, head.pred, arity(head))
     newcount = 0
 
+    # DFS join through body atoms.
     function dfs(i::Int, bind::Dictionary{Symbol,Int})
         if i > length(body)
             tup = _emit_head_tuple(head, bind)
@@ -154,8 +166,8 @@ function _apply_rule!(ctx::TLContext, rule::Rule, snap::Dictionary{Symbol,Any}):
         end
 
         a = body[i]
-        rs = rows[i]
-        for row in rs
+        rows = _rows(snap, a.pred)
+        for row in rows
             _row_compatible!(ctx, bind, a, row) || continue
 
             # Avoid copying unless this atom introduces new vars.
@@ -185,7 +197,7 @@ end
 """Run a program in a context. Returns `ctx` after running.
 
 Keyword arguments:
-- `maxiters`: maximum rule-application iterations
+- `maxiters`: maximum forward-chaining iterations (rounds)
 - `stop`: `:fixpoint` (default) or `:maxiters`
 """
 function run!(ctx::TLContext, prog::IRProgram; maxiters::Int=50, stop::Symbol=:fixpoint)
@@ -194,13 +206,17 @@ function run!(ctx::TLContext, prog::IRProgram; maxiters::Int=50, stop::Symbol=:f
         _add_fact!(ctx, a)
     end
 
-    # Iterate rules to a fixpoint (rule bodies see a per-iteration snapshot).
-    for _ in 1:maxiters
-        snap = Dictionary{Symbol,Any}()
-        for (pred, rel) in pairs(ctx.rels)
-            set!(snap, pred, collect((rel::SparseRelation).tuples))
+    # Predeclare all predicates mentioned in rules so snapshots include them (possibly empty).
+    for r in prog.rules
+        declare_relation!(ctx, r.head.pred, arity(r.head))
+        for a in r.body
+            declare_relation!(ctx, a.pred, arity(a))
         end
+    end
 
+    # Iterate rules to fixpoint using round snapshots.
+    for _ in 1:maxiters
+        snap = _snapshot(ctx)
         added = 0
         for r in prog.rules
             added += _apply_rule!(ctx, r, snap)
