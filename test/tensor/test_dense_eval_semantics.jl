@@ -41,7 +41,10 @@
     # constants require consts mapping
     @test_throws ArgumentError eval_dense(parse_tlexpr("knows(Alice,y)"), ctx; inputs=inputs)
     consts = Dictionary{Symbol,Any}()
-    set!(consts, :Person, Dictionary{Symbol,Int}(:Alice=>1, :Bob=>2))
+    persons = Dictionary{Symbol,Int}()
+    set!(persons, :Alice, 1)
+    set!(persons, :Bob, 2)
+    set!(consts, :Person, persons)
     outc = eval_dense(parse_tlexpr("knows(Alice,y)"), ctx; inputs=inputs, consts=consts)
     @test outc.axes == [:y]
     @test outc.data ≈ knows[1, :]
