@@ -16,4 +16,8 @@ using Dictionaries
     @testset "Tensor semantics + dense execution" begin
         include("tensor/test_dense_eval_semantics.jl")
     end
+
+    @testset "Lint" begin
+        include("lint/test_source_hygiene.jl")
+    end
 end

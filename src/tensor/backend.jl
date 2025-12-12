@@ -1,45 +1,47 @@
 #------------------------------------------------------------------------------
-# Dense execution backends (optional)
+# Dense execution backends
 #
-# Design:
-#   - The sparse rule engine never uses these.
-#   - The expression language can optionally route "exists over product-conjunction
-#     of predicates" through a contraction backend.
+# Notes:
+# - The sparse rule engine never uses these.
+# - The expression language evaluator may route specific EXISTS+AND patterns
+#   through a contraction backend for performance.
 #------------------------------------------------------------------------------
+using Dictionaries
+
 abstract type DenseBackend end
 
 """Pure Julia fallback backend based on axis alignment + broadcast + reductions."""
 struct BroadcastBackend <: DenseBackend end
+
 broadcast_backend() = BroadcastBackend()
 
 """Resolve a backend selector into a concrete `DenseBackend`.
 
-Backend selectors:
-- `:auto`      -> choose the best available backend (currently `BroadcastBackend`)
-- `:broadcast` -> `BroadcastBackend`
-- `:omeinsum`  -> `OMEinsumBackend` if the OMEinsum extension is available
+Selectors:
+- `:auto`      -> choose the best available backend
+- `:broadcast` -> broadcast backend
+- `:omeinsum`  -> OMEinsum backend (requires optional extension)
 
-You can also pass an explicit `DenseBackend` instance.
-
-"""
-- :auto      -> choose best available (currently BroadcastBackend)
-- :broadcast -> BroadcastBackend
-- :omeinsum  -> OMEinsum backend if extension is loaded
-"""
-"""Resolve a backend selector (`:auto`, `:broadcast`, `:omeinsum`) into a concrete backend.
-
-You may also pass a backend instance.
+You may also pass a concrete backend instance.
 """
 function resolve_backend(backend)::DenseBackend
     backend isa DenseBackend && return backend
-    backend === :auto      && return BroadcastBackend()
-    backend === :broadcast && return BroadcastBackend()
-    if backend === :omeinsum
-        # Provided by extension if OMEinsum is installed.
+
+    if backend === :auto
+        # Prefer OMEinsum when available; otherwise fall back to broadcast.
         if isdefined(TensorLogic, :OMEinsumBackend)
-            return TensorLogic.OMEinsumBackend()  # default options; you can construct OMEinsumBackend(; ntrials=..., slice_target=...)
+            return TensorLogic.OMEinsumBackend()
+        else
+            return broadcast_backend()
         end
-        throw(ArgumentError("backend=:omeinsum requested but OMEinsum is not available. Add OMEinsum.jl to your environment."))
+    elseif backend === :broadcast
+        return broadcast_backend()
+    elseif backend === :omeinsum
+        if isdefined(TensorLogic, :OMEinsumBackend)
+            return TensorLogic.OMEinsumBackend()
+        end
+        throw(ArgumentError("backend=:omeinsum requested but TensorLogicOMEinsumExt is not available. Add OMEinsum.jl to your environment."))
     end
-    throw(ArgumentError("unknown backend: $backend"))
+
+    throw(ArgumentError("unknown backend selector: $backend"))
 end
