@@ -6,7 +6,8 @@ DocMeta.setdocmeta!(TensorLogic, :DocTestSetup, :(using TensorLogic); recursive=
 makedocs(
     modules=[TensorLogic],
     sitename="TensorLogic.jl",
-    format=Documenter.HTML(prettyurls=false),
+    format=Documenter.HTML(prettyurls=get(ENV, "CI", nothing) == "true"),
+    warnonly=[:missing_docs],
     pages=[
         "Home" => "index.md",
         "Rule programs (sparse)" => "rule_programs.md",
@@ -20,4 +21,8 @@ makedocs(
     ],
 )
 
-deploydocs(repo="") # disabled by default
+deploydocs(
+    repo="github.com/JeffreySarnoff/TensorLogic.jl",
+    devbranch="main",
+    push_preview=true,
+)
