@@ -8,9 +8,9 @@ using Dictionaries
 This is the dense analogue of a relational join (product) followed by projection (sum-out).
 
 Requirements / behavior:
-- `terms` must be non-empty
-- axes with the same name must have the same extent across all terms
-- the result is ordered exactly as `lhs_axes`
+* `terms` must be non-empty
+* axes with the same name must have the same extent across all terms
+* the result is ordered exactly as `lhs_axes`
 """
 function join_project_dense(terms::Vector{LabeledTensor}, lhs_axes::Vector{Symbol})
     isempty(terms) && throw(ArgumentError("join_project_dense: empty terms"))

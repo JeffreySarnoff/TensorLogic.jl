@@ -33,7 +33,7 @@ end
 """Serialize a `TLGraph` to a JSON string.
 
 Keyword arguments:
-- `indent`: indentation level passed to JSON3
+* `indent`: indentation level passed to JSON3
 """
 function export_json(g::TLGraph; indent::Int=2)
     return String(JSON3.write(export_json_obj(g); indent=indent))

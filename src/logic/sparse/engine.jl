@@ -197,8 +197,8 @@ end
 """Run a program in a context. Returns `ctx` after running.
 
 Keyword arguments:
-- `maxiters`: maximum forward-chaining iterations (rounds)
-- `stop`: `:fixpoint` (default) or `:maxiters`
+* `maxiters`: maximum forward-chaining iterations (rounds)
+* `stop`: `:fixpoint` (default) or `:maxiters`
 """
 function run!(ctx::TLContext, prog::IRProgram; maxiters::Int=50, stop::Symbol=:fixpoint)
     # Insert facts.

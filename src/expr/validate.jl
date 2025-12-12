@@ -6,9 +6,9 @@ using Dictionaries
 """Validation report returned by `validate_expr`.
 
 Fields:
-- `ok` (Bool)
-- `errors` (Vector{String})
-- `warnings` (Vector{String})
+* `ok` (Bool)
+* `errors` (Vector{String})
+* `warnings` (Vector{String})
 """
 struct ValidationReport
     ok::Bool
@@ -31,7 +31,7 @@ function validate_expr(expr::TLExpr, ctx::CompilerContext; strict::Bool=false)::
     warn(msg) = push!(warns, msg)
     err(msg)  = push!(errors, msg)
 
-    function bind(v::Symbol, f)
+    function bind(f, v::Symbol)
         v in bound && warn("variable shadowing: $v is re-bound in nested quantifier")
         push!(bound, v)
         try

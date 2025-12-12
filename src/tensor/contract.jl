@@ -83,9 +83,9 @@ end
 """Try to evaluate `exists v. body` by factoring body into predicates and contracting with a planner.
 
 This optimization is enabled only when:
-- AND-kind is `:prod` (product semantics),
-- exists-reduce kind is `:sum` or `:mean`,
-- body is a pure conjunction of predicates.
+* AND-kind is `:prod` (product semantics),
+* exists-reduce kind is `:sum` or `:mean`,
+* body is a pure conjunction of predicates.
 
 Otherwise, callers should fall back to generic evaluation.
 """

@@ -18,9 +18,9 @@ broadcast_backend() = BroadcastBackend()
 """Resolve a backend selector into a concrete `DenseBackend`.
 
 Selectors:
-- `:auto`      -> choose the best available backend
-- `:broadcast` -> broadcast backend
-- `:omeinsum`  -> OMEinsum backend (requires optional extension)
+* `:auto`      -> choose the best available backend
+* `:broadcast` -> broadcast backend
+* `:omeinsum`  -> OMEinsum backend (requires optional extension)
 
 You may also pass a concrete backend instance.
 """

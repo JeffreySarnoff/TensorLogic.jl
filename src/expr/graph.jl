@@ -19,9 +19,9 @@ _term_label(t::TLTerm) = t isa VarT ? string((t::VarT).name) : string((t::ConstT
 """Compile a `TLExpr` into a `TLGraph` (a DAG for analysis/export).
 
 The graph form is used for:
-- DOT export (`export_dot`)
-- JSON export (`export_json`)
-- tooling/inspection
+* DOT export (`export_dot`)
+* JSON export (`export_json`)
+* tooling/inspection
 
 It does not change semantics; it is an analysis representation.
 
