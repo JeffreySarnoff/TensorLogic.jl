@@ -24,8 +24,8 @@ The graph form is used for:
 - tooling/inspection
 
 It does not change semantics; it is an analysis representation.
-"""
-"""Compile a `TLExpr` into a `TLGraph` (DAG) for analysis and export.
+
+Compile a `TLExpr` into a `TLGraph` (DAG) for analysis and export.
 
 Use `export_dot` and `export_json` on the returned graph.
 """
