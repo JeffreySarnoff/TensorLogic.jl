@@ -1,0 +1,40 @@
+name: Bug report
+description: Report a problem or regression in TensorLogic.jl
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! Please include a minimal reproducer and environment info.
+  - type: textarea
+    id: reproducer
+    attributes:
+      label: Minimal reproducer
+      description: A short code snippet that triggers the bug.
+      placeholder: |
+        using TensorLogic
+        # ...
+      render: julia
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior / stacktrace
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: env
+    attributes:
+      label: Environment
+      description: Paste the output of `versioninfo()` and `Pkg.status()`.
+      render: text
+    validations:
+      required: true
