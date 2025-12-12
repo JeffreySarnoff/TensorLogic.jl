@@ -1,5 +1,26 @@
 module TensorLogic
 
+export
+    # rule-program surface + engine
+    parse_tensorlogic, parse_datalog, parse_equations,
+    Term, Var, Const, Atom, Rule, IRProgram, arity, is_fact,
+    TLContext, intern!, object_symbol, declare_relation!, relation_tuples, run!,
+
+    # dense helper
+    LabeledTensor, join_project_dense,
+    DenseBackend, BroadcastBackend, broadcast_backend, resolve_backend,
+    ContractionPlanner, GreedyPlanner, greedy_planner, ContractionPlan, plan_contraction,
+
+    # expression compiler + evaluation
+    TLExpr, TLTerm, VarT, ConstT, Pred,
+    pred, and_, or_, not_, imply, exists, forall,
+    CompilerContext, add_domain!, declare_predicate!,
+    CompilationConfig, soft_differentiable, hard_boolean, fuzzy_godel, fuzzy_product, fuzzy_lukasiewicz, probabilistic,
+    parse_tlexpr, eval_dense,
+    TLGraph, GraphNode, compile_graph, graph_stats, export_dot,
+    ValidationReport, validate_expr,
+    export_json, export_json_obj
+
 using Dictionaries
 using JSON3
 using LinearAlgebra
@@ -40,26 +61,5 @@ include("expr/eval_dense.jl")
 include("expr/graph.jl")
 include("expr/validate.jl")
 include("expr/json.jl")
-
-export
-    # rule-program surface + engine
-    parse_tensorlogic, parse_datalog, parse_equations,
-    Term, Var, Const, Atom, Rule, IRProgram, arity, is_fact,
-    TLContext, intern!, object_symbol, declare_relation!, relation_tuples, run!,
-
-    # dense helper
-    LabeledTensor, join_project_dense,
-    DenseBackend, BroadcastBackend, broadcast_backend, resolve_backend,
-    ContractionPlanner, GreedyPlanner, greedy_planner, ContractionPlan, plan_contraction,
-
-    # expression compiler + evaluation
-    TLExpr, TLTerm, VarT, ConstT, Pred,
-    pred, and_, or_, not_, imply, exists, forall,
-    CompilerContext, add_domain!, declare_predicate!,
-    CompilationConfig, soft_differentiable, hard_boolean, fuzzy_godel, fuzzy_product, fuzzy_lukasiewicz, probabilistic,
-    parse_tlexpr, eval_dense,
-    TLGraph, GraphNode, compile_graph, graph_stats, export_dot,
-    ValidationReport, validate_expr,
-    export_json, export_json_obj
 
 end # module
