@@ -6,6 +6,10 @@ using Dictionaries
 @inline _relu(x) = ifelse(x > zero(x), x, zero(x))
 
 """Evaluate a tutorial-style expression to a dense `LabeledTensor`."""
+"""Evaluate a `TLExpr` to a `LabeledTensor`.
+
+Use `inputs` to supply predicate tensors, and `config` to select semantics.
+"""
 function eval_dense(expr::TLExpr, ctx::CompilerContext;
                     inputs::Dictionary{Symbol,Any}=Dictionary{Symbol,Any}(),
                     config::CompilationConfig=soft_differentiable(),
@@ -174,31 +178,29 @@ function _eval(expr::TLExpr, ctx::CompilerContext, inputs, cfg, consts, env, bac
         axes, Aa, Bb = _align_pair(a, b)
         return LabeledTensor(_imply_apply(cfg, Aa, Bb), axes)
     
-    elseif expr isa ExistsExpr
-        e = expr::ExistsExpr
-        # domain binding (optional)
-        if e.domain != :Any
-            if _has(env, e.var.name)
-                env[e.var.name] == e.domain || throw(ArgumentError("variable $(e.var.name) domain mismatch: $(env[e.var.name]) vs $(e.domain)"))
-            else
-                set!(env, e.var.name, e.domain)
-            end
+elseif expr isa ExistsExpr
+    e = expr::ExistsExpr
+    # domain binding (optional)
+    if e.domain != :Any
+        if _has(env, e.var.name)
+            env[e.var.name] == e.domain || throw(ArgumentError("variable $(e.var.name) domain mismatch: $(env[e.var.name]) vs $(e.domain)"))
+        else
+            set!(env, e.var.name, e.domain)
         end
+    end
 
-        # optimization: if body is a pure product-conjunction of predicates and reduce kind is sum/mean,
-        # route through contraction backend to avoid huge intermediates.
-        opt = _eval_exists_conjunction(e, ctx, inputs, cfg, consts, env; backend=backend, planner=planner)
-        if opt !== nothing
-            return opt
-        end
+    # optimization: if body is a pure product-conjunction of predicates and reduce kind is sum/mean,
+    # route through contraction backend to avoid huge intermediates.
+    opt = _eval_exists_conjunction(e, ctx, inputs, cfg, consts, env; backend=backend, planner=planner)
+    if opt !== nothing
+        return opt
+    end
 
-        body = _eval(e.body, ctx, inputs, cfg, consts, env, backend, planner)
-        return _reduce_exists(cfg, body, e.var.name)
-    elseif expr isa ForallExpr
+    body = _eval(e.body, ctx, inputs, cfg, consts, env, backend, planner)
+    return _reduce_exists(cfg, body, e.var.name)    elseif expr isa ForallExpr
         e = expr::ForallExpr
-        # Forall is implemented via De Morgan: ∀x.φ ≡ ¬ ∃x. ¬φ
         inner = ExistsExpr(e.var, e.domain, NotExpr(e.body))
-        ex = _eval(inner, ctx, inputs, cfg, consts, env, backend, planner)
+        ex = _eval(inner, ctx, inputs, cfg, consts, env)
         return LabeledTensor(_not_apply(ex.data), copy(ex.axes))
     else
         throw(ArgumentError("unknown TLExpr node"))

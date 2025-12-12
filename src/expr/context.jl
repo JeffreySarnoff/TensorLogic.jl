@@ -3,6 +3,10 @@
 #------------------------------------------------------------------------------
 using Dictionaries
 
+"""Context for expression-language compilation and validation.
+
+Stores domain sizes and predicate signatures.
+"""
 mutable struct CompilerContext
     domains::Dictionary{Symbol,Int}                 # domain => size
     pred_domains::Dictionary{Symbol,Vector{Symbol}} # pred => arg domains

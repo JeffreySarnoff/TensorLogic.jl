@@ -1,6 +1,10 @@
 #------------------------------------------------------------------------------
 # Compilation strategies: connective semantics mapping
 #------------------------------------------------------------------------------
+"""Semantic configuration for interpreting connectives and quantifiers.
+
+See `soft_differentiable()`, `fuzzy_godel()`, and `probabilistic()` constructors.
+"""
 struct CompilationConfig
     strategy::Symbol
 end

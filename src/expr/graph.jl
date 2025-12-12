@@ -16,6 +16,19 @@ end
 
 _term_label(t::TLTerm) = t isa VarT ? string((t::VarT).name) : string((t::ConstT).name)
 
+"""Compile a `TLExpr` into a `TLGraph` (a DAG for analysis/export).
+
+The graph form is used for:
+- DOT export (`export_dot`)
+- JSON export (`export_json`)
+- tooling/inspection
+
+It does not change semantics; it is an analysis representation.
+"""
+"""Compile a `TLExpr` into a `TLGraph` (DAG) for analysis and export.
+
+Use `export_dot` and `export_json` on the returned graph.
+"""
 function compile_graph(expr::TLExpr; cse::Bool=true)::TLGraph
     nodes = GraphNode[]
     memo = Dictionary{Any,Int}()
@@ -72,6 +85,7 @@ function graph_stats(g::TLGraph)
     return (nodes=length(g.nodes), op_counts=ops)
 end
 
+"""Export a `TLGraph` to GraphViz DOT format as a string."""
 function export_dot(g::TLGraph; name::AbstractString="TensorLogicExpr")
     io = IOBuffer()
     println(io, "digraph ", name, " {")

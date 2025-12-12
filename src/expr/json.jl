@@ -30,5 +30,11 @@ function export_json_obj(g::TLGraph)
     return (; root=g.root, nodes=nodes, edges=edges)
 end
 
-"""Serialize a graph to JSON."""
-export_json(g::TLGraph; indent::Int=2) = String(JSON3.write(export_json_obj(g); indent=indent))
+"""Serialize a `TLGraph` to a JSON string.
+
+Keyword arguments:
+- `indent`: indentation level passed to JSON3
+"""
+function export_json(g::TLGraph; indent::Int=2)
+    return String(JSON3.write(export_json_obj(g); indent=indent))
+end

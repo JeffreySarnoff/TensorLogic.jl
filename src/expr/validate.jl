@@ -3,6 +3,13 @@
 #------------------------------------------------------------------------------
 using Dictionaries
 
+"""Validation report returned by `validate_expr`.
+
+Fields:
+- `ok` (Bool)
+- `errors` (Vector{String})
+- `warnings` (Vector{String})
+"""
 struct ValidationReport
     ok::Bool
     errors::Vector{String}
@@ -10,6 +17,10 @@ struct ValidationReport
 end
 
 """Validate an expression against declared domains and (optionally) predicate signatures."""
+"""Validate a `TLExpr` against a `CompilerContext`.
+
+Returns a `ValidationReport`.
+"""
 function validate_expr(expr::TLExpr, ctx::CompilerContext; strict::Bool=false)::ValidationReport
     errors = String[]
     warns  = String[]
