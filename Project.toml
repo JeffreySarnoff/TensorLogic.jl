@@ -4,7 +4,7 @@ authors = ["TensorLogic.jl contributors"]
 version = "0.9.1"
 
 [deps]
-Dictionaries = "85a47980-9c8c-11e8-0b1a-8b2f0c0d21b0"
+Dictionaries = "85a47980-9c8c-11e8-2b9f-f7ca1fa99fb4"
 JSON3 = "0f8b85d8-7281-11e9-16c2-39a750bddbf1"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
