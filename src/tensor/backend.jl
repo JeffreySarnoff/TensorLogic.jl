@@ -15,6 +15,13 @@ struct BroadcastBackend <: DenseBackend end
 
 broadcast_backend() = BroadcastBackend()
 
+"""Construct an OMEinsum backend (available when OMEinsum.jl is loaded).
+
+This function is extended by the TensorLogicOMEinsumExt extension.
+Call with keyword arguments: `OMEinsumBackend(; optimize_order=true, ntrials=4, slice_target=nothing)`
+"""
+function OMEinsumBackend end
+
 """Resolve a backend selector into a concrete `DenseBackend`.
 
 Selectors:
@@ -29,19 +36,21 @@ function resolve_backend(backend)::DenseBackend
 
     if backend === :auto
         # Prefer OMEinsum when available; otherwise fall back to broadcast.
-        if isdefined(TensorLogic, :OMEinsumBackend)
-            return TensorLogic.OMEinsumBackend()
+        # Check if the extension has added methods to OMEinsumBackend
+        if !isempty(methods(OMEinsumBackend))
+            return OMEinsumBackend()
         else
             return broadcast_backend()
         end
     elseif backend === :broadcast
         return broadcast_backend()
     elseif backend === :omeinsum
-        if isdefined(TensorLogic, :OMEinsumBackend)
-            return TensorLogic.OMEinsumBackend()
+        if !isempty(methods(OMEinsumBackend))
+            return OMEinsumBackend()
         end
         throw(ArgumentError("backend=:omeinsum requested but TensorLogicOMEinsumExt is not available. Add OMEinsum.jl to your environment."))
     end
 
     throw(ArgumentError("unknown backend selector: $backend"))
 end
+
