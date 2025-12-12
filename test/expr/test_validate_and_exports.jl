@@ -17,7 +17,7 @@
     ctx = CompilerContext()
     rep = validate_expr(expr, ctx)
     @test !rep.ok
-    @test any(occursin("domain Person not found"), rep.errors)
+    @test any(s -> occursin("domain Person not found", s), rep.errors)
 
     # once domain exists, ok (pred signatures optional => warnings)
     add_domain!(ctx, :Person, 2)
@@ -28,7 +28,7 @@
     # strict mode requires predicate signatures
     rep3 = validate_expr(expr, ctx; strict=true)
     @test !rep3.ok
-    @test any(occursin("strict: predicate knows missing declared signature"), rep3.errors)
+    @test any(s -> occursin("strict: predicate knows missing declared signature", s), rep3.errors)
 
     # arity mismatch within expression
     expr_bad = parse_tlexpr("p(x) & p(x,y)")

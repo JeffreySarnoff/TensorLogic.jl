@@ -26,7 +26,7 @@ function _scan_sources(root::AbstractString)
 end
 
 @testset "Source hygiene (regression guards)" begin
-    bad = _scan_sources(joinpath(@__DIR__, "..", "src"))
+    bad = _scan_sources(joinpath(@__DIR__, "..", "..", "src"))
     @test isempty(bad) || begin
         @info "Source hygiene violations" bad
         false
