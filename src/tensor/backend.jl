@@ -21,7 +21,6 @@ Backend selectors:
 
 You can also pass an explicit `DenseBackend` instance.
 
-"""
 - :auto      -> choose best available (currently BroadcastBackend)
 - :broadcast -> BroadcastBackend
 - :omeinsum  -> OMEinsum backend if extension is loaded
