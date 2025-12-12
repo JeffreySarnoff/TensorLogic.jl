@@ -16,8 +16,8 @@ struct ValidationReport
     warnings::Vector{String}
 end
 
-"""Validate an expression against declared domains and (optionally) predicate signatures."""
-"""Validate a `TLExpr` against a `CompilerContext`.
+"""Validate an expression against declared domains and (optionally) predicate signatures.
+   Validate a `TLExpr` against a `CompilerContext`.
 
 Returns a `ValidationReport`.
 """
